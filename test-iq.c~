@@ -1,0 +1,115 @@
+#include <stdio.h>
+
+struct iq {
+  int valid[8];
+  int data[8];
+  int wr;
+};
+
+int full(struct iq *q) {
+  return q->valid[q->wr] == 1;
+}
+
+unsigned char valid2(struct iq *q) {
+  unsigned char v = 0;
+  int i = 0;
+  for (i = 0; i < 8; i++) {
+    if (q->valid[i])
+      v |= (1 << i);
+  }
+  return v;
+}
+
+unsigned short data2(struct iq *q) {
+  unsigned short v = 0;
+  int i = 0;
+  unsigned short mask = 3;
+  for (i = 0; i < 8; i++) {
+      v |= ((q->data[i] & mask) << (i * 2));
+  }
+  return v;
+}
+
+void op(struct iq *q, int issue, int deq, int data, int enq, int flush) {
+  int i = 0;
+  printf("%d %d %d %d %d %.4x %.2x %d\n", issue, deq, data, enq, flush, data2(q), valid2(q), full(q));
+  // printf("wr: %d\n", q->wr);
+  if (flush) {
+    q->wr = 0;
+    for (i = 0; i < 8; i++) {
+      q->valid[i] = 0;
+    }
+    return;
+  }
+  if (deq && q->valid[issue]) {
+    q->valid[issue] = 0;
+  }
+  if (enq && !full(q)) {
+    q->valid[q->wr] = 1;
+    q->data[q->wr] = data;
+    q->wr = (q->wr + 1) % 8;
+  }
+}
+
+int main() {
+  struct iq q;
+  q.wr = 0;
+  int i = 0;
+  for (i = 0; i < 8; i++) {
+    q.valid[i] = 0;
+    q.data[i] = 0;
+  }
+
+  op(&q, 0, 0, 1, 1, 0);
+  op(&q, 0, 0, 2, 1, 0);
+  op(&q, 0, 0, 3, 1, 0);
+  op(&q, 0, 0, 0, 1, 0);
+  op(&q, 0, 0, 2, 1, 0);
+  op(&q, 0, 0, 3, 1, 0);
+  op(&q, 0, 0, 3, 1, 0);
+  op(&q, 0, 0, 1, 1, 0);
+  op(&q, 0, 0, 0, 0, 0);
+  op(&q, 4, 1, 0, 0, 0);
+  op(&q, 2, 1, 0, 0, 0);
+  op(&q, 0, 1, 0, 0, 0);
+  op(&q, 0, 0, 3, 1, 0);
+  op(&q, 1, 1, 1, 1, 0);
+  op(&q, 3, 1, 2, 1, 0);
+  op(&q, 3, 0, 2, 1, 0);
+  op(&q, 0, 0, 2, 1, 0);
+  op(&q, 5, 1, 2, 1, 0);
+  op(&q, 6, 1, 0, 1, 0);
+  op(&q, 7, 1, 0, 1, 0);
+  op(&q, 0, 1, 0, 1, 0);
+  op(&q, 1, 1, 0, 1, 0);
+  op(&q, 1, 1, 0, 0, 0);
+  op(&q, 3, 1, 0, 0, 0);
+  op(&q, 5, 1, 0, 0, 0);
+  op(&q, 7, 1, 0, 0, 0);
+  op(&q, 2, 1, 3, 0, 0);
+  op(&q, 0, 0, 0, 0, 0);
+  op(&q, 0, 1, 0, 1, 1);
+  op(&q, 0, 0, 0, 0, 0);
+
+/* test for illegal op */
+  op(&q, 1, 1, 0, 0, 0);
+  op(&q, 2, 1, 0, 0, 0);
+  op(&q, 7, 1, 0, 0, 0);
+  op(&q, 0, 0, 1, 1, 0);
+  op(&q, 0, 0, 2, 1, 0);
+  op(&q, 0, 0, 3, 1, 0);
+  op(&q, 0, 0, 0, 1, 0);
+  op(&q, 0, 0, 2, 1, 0);
+  op(&q, 0, 0, 3, 1, 0);
+  op(&q, 0, 0, 3, 1, 0);
+  op(&q, 0, 0, 1, 1, 0);
+  op(&q, 0, 0, 2, 1, 0);
+  op(&q, 1, 1, 2, 1, 0);
+  op(&q, 7, 1, 2, 1, 0);
+  op(&q, 0, 1, 2, 1, 0);
+  op(&q, 3, 1, 2, 1, 0);
+  op(&q, 3, 1, 1, 1, 0);
+  op(&q, 3, 1, 0, 1, 0);
+  op(&q, 0, 0, 0, 0, 0);
+
+}

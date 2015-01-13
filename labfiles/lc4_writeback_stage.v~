@@ -1,0 +1,45 @@
+`timescale 1ns / 1ps
+
+module lc4_writeback_stage(AW_valid, LW_valid, 
+                           AW_rob_index, LW_rob_index,
+                           AW_prd, LW_prd,
+                           AW_insn, LW_insn,
+                           AW_rddata, LW_rddata,
+                           AW_r1data, AW_r2data, LW_r1data, LW_r2data,
+                           AW_pc_redirect, LW_pc_redirect,
+                           W_valid, W_rob_index, W_pc_redirect, W_r1data, W_r2data, W_rddata,
+                           W_prd, W_nzp, W_regfile_we, W_nzp_we);
+
+   input AW_valid, LW_valid;
+   input [1:0] AW_rob_index, LW_rob_index;
+   input [3:0] AW_prd, LW_prd;
+   input [15:0]    AW_insn, LW_insn, AW_rddata, LW_rddata, AW_r1data, AW_r2data, LW_r1data, LW_r2data, AW_pc_redirect, LW_pc_redirect;
+   output W_valid, W_regfile_we, W_nzp_we;
+   output [1:0] W_rob_index;
+   output [15:0] W_pc_redirect, W_r1data, W_r2data, W_rddata;
+   output [2:0] W_nzp;
+   output [3:0] W_prd;
+
+   wire [15:0] W_insn;
+   wire W_arbiter;
+  
+   assign W_valid = (AW_valid | LW_valid) & ~(AW_valid & LW_valid);
+   assign W_arbiter = (AW_valid) ? 1'b0 : 1'b1;
+
+   mux_Nbit_2to1 #(16) insn_mux (.out(W_insn), .a(AW_insn), .b(LW_insn), .sel(W_arbiter));
+   mux_Nbit_2to1 #(16) pc_redirect_mux (.out(W_pc_redirect), .a(AW_pc_redirect), .b(LW_pc_redirect), .sel(W_arbiter));
+   mux_Nbit_2to1 #(16) r1data_mux (.out(W_r1data), .a(AW_r1data), .b(LW_r1data), .sel(W_arbiter));
+   mux_Nbit_2to1 #(16) r2data_mux (.out(W_r2data), .a(AW_r2data), .b(LW_r2data), .sel(W_arbiter));
+   mux_Nbit_2to1 #(16) rddata_mux (.out(W_rddata), .a(AW_rddata), .b(LW_rddata), .sel(W_arbiter));
+   mux_Nbit_2to1 #(2) rob_index_mux (.out(W_rob_index), .a(AW_rob_index), .b(LW_rob_index), .sel(W_arbiter));
+   mux_Nbit_2to1 #(4) prd_mux (.out(W_prd), .a(AW_prd), .b(LW_prd), .sel(W_arbiter));
+
+   assign W_nzp = (W_rddata == 16'd0) ? (3'b010) :
+                  (W_rddata[15] == 1'b1) ? (3'b100) : (3'b001);
+
+   wire regfile_we, nzp_we;
+   assign W_regfile_we = regfile_we & W_valid;
+   assign W_nzp_we = nzp_we & W_valid;
+   lc4_decoder decoder(.insn(W_insn), .wsel(W_rd), .regfile_we(regfile_we), .nzp_we(nzp_we));
+   
+endmodule

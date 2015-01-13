@@ -1,0 +1,218 @@
+
+`timescale 1ns / 1ps
+
+module lc4_issue_queue(iq0_insn, iq1_insn, iq2_insn, iq3_insn,
+                       iq0_pr1, iq1_pr1, iq2_pr1, iq3_pr1,
+                       iq0_pr2, iq1_pr2, iq2_pr2, iq3_pr2,
+                       iq0_prd, iq1_prd, iq2_prd, iq3_prd,
+                       iq_valid, iq_issue, iq_commit, iq_rd,
+                       a0_valid, a0_prd, a0_rddata,
+                       l0_valid, l0_prd, l0_ready, l0_rddata, l0_struct,
+                       l1_valid, l1_prd, l1_rddata,
+                       wb_valid, wb_prd, wb_rddata,
+                       is_valid, is_r1data, is_r2data,
+                       is_pr1sel, is_pr2sel,
+                       is_r1bypass, is_r2bypass,
+                       is_index_out, iq_mem_out);
+
+   input [15:0]    iq0_insn, iq1_insn, iq2_insn, iq3_insn;
+   input [3:0]     iq0_pr1, iq1_pr1, iq2_pr1, iq3_pr1;
+   input [3:0]     iq0_pr2, iq1_pr2, iq2_pr2, iq3_pr2;
+   input [3:0]     iq0_prd, iq1_prd, iq2_prd, iq3_prd;
+   input [3:0]     iq_valid, iq_issue, iq_commit;
+   input [1:0]     iq_rd;
+   input           a0_valid, l0_valid, l0_ready, l0_struct, l1_valid, wb_valid;
+   input [15:0]    a0_rddata, l0_rddata, l1_rddata, wb_rddata, is_r1data, is_r2data;
+   input [3:0]     a0_prd, l0_prd, l1_prd, wb_prd;
+
+   output          is_valid;
+   output [1:0]    is_index_out;
+   output [3:0]    is_pr1sel, is_pr2sel, iq_mem_out;
+   output [15:0]   is_r1bypass, is_r2bypass;
+
+   wire [3:0]      iq_unissue;
+   assign iq_unissue = iq_valid & ~iq_issue;
+
+   // LD/ST QUEUE
+   wire [3:0]      iq_mem;
+   wire [1:0]      iq_mem_index;
+   lc4_memory_queue memory_queue (.iq0_insn(iq0_insn), .iq1_insn(iq1_insn), .iq2_insn(iq2_insn), .iq3_insn(iq3_insn),
+                                  .iq_valid(iq_valid), .iq_issue(iq_issue), .iq_commit(iq_commit), .iq_rd(iq_rd),
+                                  .iq_mem(iq_mem), .iq_mem_index(iq_mem_index));
+   assign iq_mem_out = {2'd0, iq_rd};
+
+   wire [2:0]      iq0_r1;
+   wire [2:0]      iq0_r2;
+   wire [2:0]      iq0_rd;
+   wire            iq0_r1re;
+   wire            iq0_r2re;
+   wire            iq0_rdre;
+   wire            iq0_a_type;
+   wire            iq0_r1_raw;
+   wire            iq0_r2_raw;
+   wire            iq0_r1_ready;
+   wire            iq0_r2_ready;
+   wire [15:0]     iq0_r1_bypass;
+   wire [15:0]     iq0_r2_bypass;
+   wire            iq0_ready;
+   lc4_decoder iq0_decoder(.insn(iq0_insn), .r1sel(iq0_r1), .r1re(iq0_r1re), .r2sel(iq0_r2), .r2re(iq0_r2re), .wsel(iq0_rd), .regfile_we(iq0_rdre), .is_a_type(iq0_a_type));
+   lc4_scoreboard iq0_sb1(.iq0_insn(iq0_insn), .iq1_insn(iq1_insn), .iq2_insn(iq2_insn), .iq3_insn(iq3_insn),
+                          .iq0_prd(iq0_prd), .iq1_prd(iq1_prd), .iq2_prd(iq2_prd), .iq3_prd(iq3_prd),
+                          .iq_valid(iq_valid), .iq_issue(iq_issue), .iq_commit(iq_commit),
+                          .a0_valid(a0_valid), .a0_prd(a0_prd), .a0_rddata(a0_rddata),
+                          .l0_valid(l0_valid), .l0_prd(l0_prd), .l0_ready(l0_ready), .l0_rddata(l0_rddata),
+                          .l1_valid(l1_valid), .l1_prd(l1_prd), .l1_rddata(l1_rddata),
+                          .wb_valid(wb_valid), .wb_prd(wb_prd), .wb_rddata(wb_rddata),
+                          .iqx_pri(iq0_pr1), .iqx(2'd0), .iqx_raw(iq0_r1_raw), .iqx_ready(iq0_r1_ready), .iqx_bypass(iq0_r1_bypass));
+   lc4_scoreboard iq0_sb2(.iq0_insn(iq0_insn), .iq1_insn(iq1_insn), .iq2_insn(iq2_insn), .iq3_insn(iq3_insn),
+                          .iq0_prd(iq0_prd), .iq1_prd(iq1_prd), .iq2_prd(iq2_prd), .iq3_prd(iq3_prd),
+                          .iq_valid(iq_valid), .iq_issue(iq_issue), .iq_commit(iq_commit),
+                          .a0_valid(a0_valid), .a0_prd(a0_prd), .a0_rddata(a0_rddata),
+                          .l0_valid(l0_valid), .l0_prd(l0_prd), .l0_ready(l0_ready), .l0_rddata(l0_rddata),
+                          .l1_valid(l1_valid), .l1_prd(l1_prd), .l1_rddata(l1_rddata),
+                          .wb_valid(wb_valid), .wb_prd(wb_prd), .wb_rddata(wb_rddata),
+                          .iqx_pri(iq0_pr2), .iqx(2'd0), .iqx_raw(iq0_r2_raw), .iqx_ready(iq0_r2_ready), .iqx_bypass(iq0_r2_bypass));
+   assign iq0_ready = iq_unissue[0] &
+                      (~iq0_r1_raw | ~iq0_r1re) &
+                      (~iq0_r2_raw | ~iq0_r2re) &
+                      (~iq0_a_type | ~l0_struct) &
+                      (~iq_mem[0] | (iq_mem_index == 2'd0));
+
+   wire [2:0]      iq1_r1;
+   wire [2:0]      iq1_r2;
+   wire [2:0]      iq1_rd;
+   wire            iq1_r1re;
+   wire            iq1_r2re;
+   wire            iq1_rdre;
+   wire            iq1_a_type;
+   wire            iq1_r1_raw;
+   wire            iq1_r2_raw;
+   wire            iq1_r1_ready;
+   wire            iq1_r2_ready;
+   wire [15:0]     iq1_r1_bypass;
+   wire [15:0]     iq1_r2_bypass;
+   wire            iq1_ready;
+   lc4_decoder iq1_decoder(.insn(iq1_insn), .r1sel(iq1_r1), .r1re(iq1_r1re), .r2sel(iq1_r2), .r2re(iq1_r2re), .wsel(iq1_rd), .regfile_we(iq1_rdre), .is_a_type(iq1_a_type));
+   lc4_scoreboard iq1_sb1(.iq0_insn(iq0_insn), .iq1_insn(iq1_insn), .iq2_insn(iq2_insn), .iq3_insn(iq3_insn),
+                          .iq0_prd(iq0_prd), .iq1_prd(iq1_prd), .iq2_prd(iq2_prd), .iq3_prd(iq3_prd),
+                          .iq_valid(iq_valid), .iq_issue(iq_issue), .iq_commit(iq_commit),
+                          .a0_valid(a0_valid), .a0_prd(a0_prd), .a0_rddata(a0_rddata),
+                          .l0_valid(l0_valid), .l0_prd(l0_prd), .l0_ready(l0_ready), .l0_rddata(l0_rddata),
+                          .l1_valid(l1_valid), .l1_prd(l1_prd), .l1_rddata(l1_rddata),
+                          .wb_valid(wb_valid), .wb_prd(wb_prd), .wb_rddata(wb_rddata),
+                          .iqx_pri(iq1_pr1), .iqx(2'd1), .iqx_raw(iq1_r1_raw), .iqx_ready(iq1_r1_ready), .iqx_bypass(iq1_r1_bypass));
+   lc4_scoreboard iq1_sb2(.iq0_insn(iq0_insn), .iq1_insn(iq1_insn), .iq2_insn(iq2_insn), .iq3_insn(iq3_insn),
+                          .iq0_prd(iq0_prd), .iq1_prd(iq1_prd), .iq2_prd(iq2_prd), .iq3_prd(iq3_prd),
+                          .iq_valid(iq_valid), .iq_issue(iq_issue), .iq_commit(iq_commit),
+                          .a0_valid(a0_valid), .a0_prd(a0_prd), .a0_rddata(a0_rddata),
+                          .l0_valid(l0_valid), .l0_prd(l0_prd), .l0_ready(l0_ready), .l0_rddata(l0_rddata),
+                          .l1_valid(l1_valid), .l1_prd(l1_prd), .l1_rddata(l1_rddata),
+                          .wb_valid(wb_valid), .wb_prd(wb_prd), .wb_rddata(wb_rddata),
+                          .iqx_pri(iq1_pr2), .iqx(2'd1), .iqx_raw(iq1_r2_raw), .iqx_ready(iq1_r2_ready), .iqx_bypass(iq1_r2_bypass));
+   assign iq1_ready = iq_unissue[1] &
+                      (~iq1_r1_raw | ~iq1_r1re) &
+                      (~iq1_r2_raw | ~iq1_r2re) &
+                      (~iq1_a_type | ~l0_struct) &
+                      (~iq_mem[1] | (iq_mem_index == 2'd1)); 
+
+   wire [2:0]      iq2_r1;
+   wire [2:0]      iq2_r2;
+   wire [2:0]      iq2_rd;
+   wire            iq2_r1re;
+   wire            iq2_r2re;
+   wire            iq2_rdre;
+   wire            iq2_a_type;
+   wire            iq2_r1_raw;
+   wire            iq2_r2_raw;
+   wire            iq2_r1_ready;
+   wire            iq2_r2_ready;
+   wire [15:0]     iq2_r1_bypass;
+   wire [15:0]     iq2_r2_bypass;
+   wire            iq2_ready;
+   lc4_decoder iq2_decoder(.insn(iq2_insn), .r1sel(iq2_r1), .r1re(iq2_r1re), .r2sel(iq2_r2), .r2re(iq2_r2re), .wsel(iq2_rd), .regfile_we(iq2_rdre), .is_a_type(iq2_a_type));
+   lc4_scoreboard iq2_sb1(.iq0_insn(iq0_insn), .iq1_insn(iq1_insn), .iq2_insn(iq2_insn), .iq3_insn(iq3_insn),
+                          .iq0_prd(iq0_prd), .iq1_prd(iq1_prd), .iq2_prd(iq2_prd), .iq3_prd(iq3_prd),
+                          .iq_valid(iq_valid), .iq_issue(iq_issue), .iq_commit(iq_commit),
+                          .a0_valid(a0_valid), .a0_prd(a0_prd), .a0_rddata(a0_rddata),
+                          .l0_valid(l0_valid), .l0_prd(l0_prd), .l0_ready(l0_ready), .l0_rddata(l0_rddata),
+                          .l1_valid(l1_valid), .l1_prd(l1_prd), .l1_rddata(l1_rddata),
+                          .wb_valid(wb_valid), .wb_prd(wb_prd), .wb_rddata(wb_rddata),
+                          .iqx_pri(iq2_pr1), .iqx(2'd2), .iqx_raw(iq2_r1_raw), .iqx_ready(iq2_r1_ready), .iqx_bypass(iq2_r1_bypass));
+   lc4_scoreboard iq2_sb2(.iq0_insn(iq0_insn), .iq1_insn(iq1_insn), .iq2_insn(iq2_insn), .iq3_insn(iq3_insn),
+                          .iq0_prd(iq0_prd), .iq1_prd(iq1_prd), .iq2_prd(iq2_prd), .iq3_prd(iq3_prd),
+                          .iq_valid(iq_valid), .iq_issue(iq_issue), .iq_commit(iq_commit),
+                          .a0_valid(a0_valid), .a0_prd(a0_prd), .a0_rddata(a0_rddata),
+                          .l0_valid(l0_valid), .l0_prd(l0_prd), .l0_ready(l0_ready), .l0_rddata(l0_rddata),
+                          .l1_valid(l1_valid), .l1_prd(l1_prd), .l1_rddata(l1_rddata),
+                          .wb_valid(wb_valid), .wb_prd(wb_prd), .wb_rddata(wb_rddata),
+                          .iqx_pri(iq2_pr2), .iqx(2'd2), .iqx_raw(iq2_r2_raw), .iqx_ready(iq2_r2_ready), .iqx_bypass(iq2_r2_bypass));
+   assign iq2_ready = iq_unissue[2] &
+                      (~iq2_r1_raw | ~iq2_r1re) &
+                      (~iq2_r2_raw | ~iq2_r2re) &
+                      (~iq2_a_type | ~l0_struct) &
+                      (~iq_mem[2] | (iq_mem_index == 2'd2)); 
+
+   wire [2:0]      iq3_r1;
+   wire [2:0]      iq3_r2;
+   wire [2:0]      iq3_rd;
+   wire            iq3_r1re;
+   wire            iq3_r2re;
+   wire            iq3_rdre;
+   wire            iq3_a_type;
+   wire            iq3_r1_raw;
+   wire            iq3_r2_raw;
+   wire            iq3_r1_ready;
+   wire            iq3_r2_ready;
+   wire [15:0]     iq3_r1_bypass;
+   wire [15:0]     iq3_r2_bypass;
+   wire            iq3_ready;
+   lc4_decoder iq3_decoder(.insn(iq3_insn), .r1sel(iq3_r1), .r1re(iq3_r1re), .r2sel(iq3_r2), .r2re(iq3_r2re), .wsel(iq3_rd), .regfile_we(iq3_rdre), .is_a_type(iq3_a_type));
+   lc4_scoreboard iq3_sb1(.iq0_insn(iq0_insn), .iq1_insn(iq1_insn), .iq2_insn(iq2_insn), .iq3_insn(iq3_insn),
+                          .iq0_prd(iq0_prd), .iq1_prd(iq1_prd), .iq2_prd(iq2_prd), .iq3_prd(iq3_prd),
+                          .iq_valid(iq_valid), .iq_issue(iq_issue), .iq_commit(iq_commit),
+                          .a0_valid(a0_valid), .a0_prd(a0_prd), .a0_rddata(a0_rddata),
+                          .l0_valid(l0_valid), .l0_prd(l0_prd), .l0_ready(l0_ready), .l0_rddata(l0_rddata),
+                          .l1_valid(l1_valid), .l1_prd(l1_prd), .l1_rddata(l1_rddata),
+                          .wb_valid(wb_valid), .wb_prd(wb_prd), .wb_rddata(wb_rddata),
+                          .iqx_pri(iq3_pr1), .iqx(2'd3), .iqx_raw(iq3_r1_raw), .iqx_ready(iq3_r1_ready), .iqx_bypass(iq3_r1_bypass));
+   lc4_scoreboard iq3_sb2(.iq0_insn(iq0_insn), .iq1_insn(iq1_insn), .iq2_insn(iq2_insn), .iq3_insn(iq3_insn),
+                          .iq0_prd(iq0_prd), .iq1_prd(iq1_prd), .iq2_prd(iq2_prd), .iq3_prd(iq3_prd),
+                          .iq_valid(iq_valid), .iq_issue(iq_issue), .iq_commit(iq_commit),
+                          .a0_valid(a0_valid), .a0_prd(a0_prd), .a0_rddata(a0_rddata),
+                          .l0_valid(l0_valid), .l0_prd(l0_prd), .l0_ready(l0_ready), .l0_rddata(l0_rddata),
+                          .l1_valid(l1_valid), .l1_prd(l1_prd), .l1_rddata(l1_rddata),
+                          .wb_valid(wb_valid), .wb_prd(wb_prd), .wb_rddata(wb_rddata),
+                          .iqx_pri(iq3_pr2), .iqx(2'd3), .iqx_raw(iq3_r2_raw), .iqx_ready(iq3_r2_ready), .iqx_bypass(iq3_r2_bypass));
+   assign iq3_ready = iq_unissue[3] &
+                      (~iq3_r1_raw | ~iq3_r1re) &
+                      (~iq3_r2_raw | ~iq3_r2re) &
+                      (~iq3_a_type | ~l0_struct) &
+                      (~iq_mem[3] | (iq_mem_index == 2'd3)); 
+
+   assign is_valid = iq0_ready | iq1_ready | iq2_ready | iq3_ready;
+
+   wire [1:0] arbiter;
+   assign arbiter = (iq3_ready) ? 2'd3 :
+                    (iq2_ready) ? 2'd2 :
+                    (iq1_ready) ? 2'd1 :
+                    (iq0_ready) ? 2'd0 : 2'd0;
+
+   assign is_index_out = arbiter;
+   mux_Nbit_4to1 #(4) pr1_mux (.out(is_pr1sel), .a(iq0_pr1), .b(iq1_pr1), .c(iq2_pr1), .d(iq3_pr1), .sel(is_index_out));
+   mux_Nbit_4to1 #(4) pr2_mux (.out(is_pr2sel), .a(iq0_pr2), .b(iq1_pr2), .c(iq2_pr2), .d(iq3_pr2), .sel(is_index_out));
+
+   wire [15:0] iqx_r1_bypass;
+   wire [15:0] iqx_r2_bypass;
+   mux_Nbit_4to1 #(16) r1_bypass_mux (.out(iqx_r1_bypass), .a(iq0_r1_bypass), .b(iq1_r1_bypass), .c(iq2_r1_bypass), .d(iq3_r1_bypass), .sel(is_index_out));
+   mux_Nbit_4to1 #(16) r2_bypass_mux (.out(iqx_r2_bypass), .a(iq0_r2_bypass), .b(iq1_r2_bypass), .c(iq2_r2_bypass), .d(iq3_r2_bypass), .sel(is_index_out));
+
+   wire iqx_r1_ready;
+   wire iqx_r2_ready;
+   mux_Nbit_4to1 #(1) r1_ready_mux (.out(iqx_r1_ready), .a(iq0_r1_ready), .b(iq1_r1_ready), .c(iq2_r1_ready), .d(iq3_r1_ready), .sel(is_index_out));
+   mux_Nbit_4to1 #(1) r2_ready_mux (.out(iqx_r2_ready), .a(iq0_r2_ready), .b(iq1_r2_ready), .c(iq2_r2_ready), .d(iq3_r2_ready), .sel(is_index_out));
+
+   assign is_r1bypass = (iqx_r1_ready) ? is_r1data : iqx_r1_bypass;
+   assign is_r2bypass = (iqx_r2_ready) ? is_r2data : iqx_r2_bypass;
+
+endmodule
+                       

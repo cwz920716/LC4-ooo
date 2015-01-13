@@ -1,0 +1,31 @@
+`timescale 1ns / 1ps
+
+module lc4_load1_stage(insn,
+                       r2data,
+                       exec_out,
+                       dmem_out,
+                       dmem_addr,
+                       dmem_we,
+                       rddata,
+                       is_load,
+                       rd,
+                       regfile_we);
+
+   input [15:0]    insn;
+   input [15:0]    r2data;
+   input [15:0]    exec_out;
+   input [15:0]    dmem_out;
+   output [15:0]   dmem_addr;
+   output          dmem_we;
+   output [15:0]   rddata;
+   output          is_load;
+   output [2:0]    rd;
+   output          regfile_we;
+
+   lc4_decoder decoder(.insn(insn), .is_load(is_load), .wsel(rd), .regfile_we(regfile_we));
+
+   assign dmem_we = 1'b0;
+   assign dmem_addr = (is_load) ? exec_out : 16'h0000;
+   assign rddata = (is_load) ? dmem_out : exec_out ;
+
+endmodule

@@ -1,0 +1,62 @@
+`timescale 1ns / 1ps
+
+module lc4_free_list (clk, gwe, rst, flush, alloc, dealloc, cpr, full, next);
+   
+   parameter n = 16;
+   parameter w = 4;
+
+   input clk, gwe, rst, flush;
+   input alloc, dealloc;
+   input [w-1:0] cpr;   // Committed Physical Register
+
+   output full;
+   output [w-1:0] next;
+
+   assign full = (free == 16'd0);
+   assign next = (free[15]) ? 4'd15 :
+                 (free[14]) ? 4'd14 :
+                 (free[13]) ? 4'd13 :
+                 (free[12]) ? 4'd12 :
+                 (free[11]) ? 4'd11 :
+                 (free[10]) ? 4'd10 :
+                 (free[9])  ? 4'd9  :
+                 (free[8])  ? 4'd8  :
+                 (free[7])  ? 4'd7  :
+                 (free[6])  ? 4'd6  :
+                 (free[5])  ? 4'd5  :
+                 (free[4])  ? 4'd4  :
+                 (free[3])  ? 4'd3  :
+                 (free[2])  ? 4'd2  :
+                 (free[1])  ? 4'd1  : 4'd0;
+
+   wire allocate, deallocate;
+   assign allocate = (alloc & ~full);
+   assign deallocate = (dealloc & ~free[cpr]);
+
+   wire [n-1:0]         free_next;
+   wire [n-1:0]         free;
+   wire [n-1:0]         free_after_alloc;
+   wire [n-1:0]         free_after_dealloc;
+   wire [n-1:0]         free_after_;
+   wire [n-1:0]         free_after_flush;
+   wire                 free_we;
+
+   genvar i;
+
+   assign free_we = allocate | deallocate | flush;
+   for (i = 0; i < n; i = i + 1) 
+      assign free_after_alloc[i] = (i == next & allocate) ? 1'b0 : free[i];
+   for (i = 0; i < n; i = i + 1)
+      assign free_after_dealloc[i] = (i == cpr & deallocate) ? 1'b1 : free[i];
+   for (i = 0; i < n; i = i + 1)
+      assign free_after_[i] = (i == next & allocate) ? 1'b0 : free_after_dealloc[i];
+
+   assign free_after_flush = 16'hff00; 
+   assign free_next = (flush) ? free_after_flush :
+                      (allocate & deallocate) ? free_after_ : 
+                      (deallocate) ? free_after_dealloc :
+                      (allocate) ? free_after_alloc :
+                      free;
+   Nbit_reg #(n, 16'hff00)   free_bits (free_next, free, clk, free_we, gwe, rst);
+
+endmodule

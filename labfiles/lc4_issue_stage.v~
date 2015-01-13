@@ -1,0 +1,62 @@
+`timescale 1ns / 1ps
+
+module lc4_issue_stage(iq0_insn, iq1_insn, iq2_insn, iq3_insn,
+                       iq0_pr1, iq1_pr1, iq2_pr1, iq3_pr1,
+                       iq0_pr2, iq1_pr2, iq2_pr2, iq3_pr2,
+                       iq0_prd, iq1_prd, iq2_prd, iq3_prd,
+                       iq0_pc, iq1_pc, iq2_pc, iq3_pc,
+                       iq0_pc_pred, iq1_pc_pred, iq2_pc_pred, iq3_pc_pred,
+                       iq_valid, iq_issue, iq_commit, iq_rd,
+                       a0_ref, a0_prd, a0_rddata,
+                       l0_ref, l0_prd, l0_ready, l0_rddata, l0_struct,
+                       l1_ref, l1_prd, l1_rddata,
+                       wb_ref, wb_prd, wb_rddata,
+                       is_r1data, is_r2data,
+                       is_valid, is_rob_index, is_pr1sel, is_pr2sel,
+                       is_r1bypass, is_r2bypass,
+                       is_insn, is_pc, is_pc_pred, is_prd, is_is_a_type, is_is_l_type, is_mem_out);
+
+   input [15:0]    iq0_insn, iq1_insn, iq2_insn, iq3_insn;
+   input [3:0]     iq0_pr1, iq1_pr1, iq2_pr1, iq3_pr1;
+   input [3:0]     iq0_pr2, iq1_pr2, iq2_pr2, iq3_pr2;
+   input [3:0]     iq0_prd, iq1_prd, iq2_prd, iq3_prd;
+   input [15:0]    iq0_pc, iq1_pc, iq2_pc, iq3_pc;
+   input [15:0]    iq0_pc_pred, iq1_pc_pred, iq2_pc_pred, iq3_pc_pred;
+   input [3:0]     iq_valid, iq_issue, iq_commit;
+   input [1:0]     iq_rd;
+   input           a0_ref, l0_ref, l0_ready, l0_struct, l1_ref, wb_ref;
+   input [15:0]    a0_rddata, l0_rddata, l1_rddata, wb_rddata, is_r1data, is_r2data;
+   input [3:0]     a0_prd, l0_prd, l1_prd, wb_prd;
+
+   output          is_valid;
+   output [1:0]    is_rob_index;
+   output [3:0]    is_pr1sel, is_pr2sel, is_prd, is_mem_out;
+   output [15:0]   is_r1bypass, is_r2bypass;
+   output [15:0]   is_insn, is_pc, is_pc_pred;
+   output          is_is_a_type, is_is_l_type;
+   
+   wire [1:0] is_index;
+   lc4_issue_queue issue_queue (.iq0_insn(iq0_insn), .iq1_insn(iq1_insn), .iq2_insn(iq2_insn), .iq3_insn(iq3_insn),
+                                .iq0_pr1(iq0_pr1), .iq1_pr1(iq1_pr1), .iq2_pr1(iq2_pr1), .iq3_pr1(iq3_pr1),
+                                .iq0_pr2(iq0_pr2), .iq1_pr2(iq1_pr2), .iq2_pr2(iq2_pr2), .iq3_pr2(iq3_pr2),
+                                .iq0_prd(iq0_prd), .iq1_prd(iq1_prd), .iq2_prd(iq2_prd), .iq3_prd(iq3_prd),
+                                .iq_valid(iq_valid), .iq_issue(iq_issue), .iq_commit(iq_commit),
+                                .a0_valid(a0_ref), .a0_prd(a0_prd), .a0_rddata(a0_rddata),
+                                .l0_valid(l0_ref), .l0_prd(l0_prd), .l0_ready(l0_ready), .l0_rddata(l0_rddata), .l0_struct(l0_struct),
+                                .l1_valid(l1_ref), .l1_prd(l1_prd), .l1_rddata(l1_rddata),
+                                .wb_valid(wb_ref), .wb_prd(wb_prd), .wb_rddata(wb_rddata),
+                                .is_valid(is_valid), .is_r1data(is_r1data), .is_r2data(is_r2data),
+                                .is_pr1sel(is_pr1sel), .is_pr2sel(is_pr2sel),
+                                .is_r1bypass(is_r1bypass), .is_r2bypass(is_r2bypass),
+                                .is_index_out(is_index), .iq_mem_out(is_mem_out));
+
+   mux_Nbit_4to1 #(16) insn_mux (.out(is_insn), .a(iq0_insn), .b(iq1_insn), .c(iq2_insn), .d(iq3_insn), .sel(is_index));
+   mux_Nbit_4to1 #(16) pc_mux (.out(is_pc), .a(iq0_pc), .b(iq1_pc), .c(iq2_pc), .d(iq3_pc), .sel(is_index));
+   mux_Nbit_4to1 #(16) pc_pred_mux (.out(is_pc_pred), .a(iq0_pc_pred), .b(iq1_pc_pred), .c(iq2_pc_pred), .d(iq3_pc_pred), .sel(is_index));
+   mux_Nbit_4to1 #(4) prd_mux (.out(is_prd), .a(iq0_prd), .b(iq1_prd), .c(iq2_prd), .d(iq3_prd), .sel(is_index));
+   lc4_decoder decoder (.insn(is_insn), .is_a_type(is_is_a_type), .is_l_type(is_is_l_type));
+
+   assign is_rob_index = is_index;
+
+endmodule
+                       

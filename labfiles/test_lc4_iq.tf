@@ -1,0 +1,132 @@
+`timescale 1ns / 1ps
+
+`define EOF 32'hFFFF_FFFF
+`define NEWLINE 10
+`define NULL 0
+
+`ifndef INPUT
+`define INPUT "test_lc4_iq.input"
+`endif
+
+`define OUTPUT "test_lc4_iq.output"
+
+module testbench_v;
+
+   integer     input_file, output_file, errors, linenum;
+
+   // Inputs
+   reg flush;
+   reg rst;
+   reg clk;
+   reg gwe;
+   
+   reg [2:0] issue_in;
+   reg [1:0] data_in;
+   reg iq_enq;
+   reg iq_deq;
+
+   // Outputs
+   wire [15:0] data;
+   wire [7:0] valid;
+   wire [2:0] xxx;
+   wire       full;
+   
+   // Instantiate the Unit Under Test (UUT)
+   
+   lc4_issue_queue iq  (.clk(clk),
+                        .gwe(gwe),
+                        .rst(rst),
+                        .flush(flush),
+                        .data_in(data_in),
+                        .iq_enq(iq_enq),
+                        .iq_deq(iq_deq),
+                        .issue_in(issue_in),
+                        .bundle_data_out(data), 
+                        .bundle_valid_out(valid),
+                        .xxx_out(xxx),
+                        .full_out(full));
+   
+   reg [15:0]  expectedValue1;
+   reg [7:0]  expectedValue2;
+   reg expectedValue3;
+   
+   always #5 clk <= ~clk;
+   
+   initial begin
+      
+      // Initialize Inputs
+      issue_in = 0;
+      data_in = 0;
+      iq_enq = 0;
+      iq_deq = 0;
+      flush = 0;
+      rst = 1;
+      clk = 0;
+      gwe = 1;
+
+      errors = 0;
+      linenum = 0;
+      output_file = 0;
+
+      // open the test inputs
+      input_file = $fopen(`INPUT, "r");
+      if (input_file == `NULL) begin
+         $display("Error opening file: ", `INPUT);
+         $finish;
+      end
+
+      // open the output file
+`ifdef OUTPUT
+      output_file = $fopen(`OUTPUT, "w");
+      if (output_file == `NULL) begin
+         $display("Error opening file: ", `OUTPUT);
+         $finish;
+      end
+`endif
+      
+      // Wait for global reset to finish
+      #100;
+      
+      #5 rst = 0;
+      
+      #2;         
+
+      while (8 == $fscanf(input_file, "%d %b %d %b %b %h %h %b", issue_in, iq_deq, data_in, iq_enq, flush, expectedValue1, expectedValue2, expectedValue3)) begin
+         
+         #8;
+              
+         linenum = linenum + 1;
+         
+         if (output_file) begin
+            $fdisplay(output_file, "%d %b %d %b %b %h %h %b %d", issue_in, iq_deq, data_in, iq_enq, flush, data, valid, full, xxx);
+         end
+
+         if (data !== expectedValue1) begin
+            $display("Error at line %d: Value of data should have been %b, but was %b instead", linenum, expectedValue1, data);
+            errors = errors + 1;
+            $finish;
+         end
+         
+         if (valid !== expectedValue2) begin
+            $display("Error at line %d: Value of valid should have been %b, but was %b instead", linenum, expectedValue2, valid);
+            errors = errors + 1;
+            $finish;
+         end
+         
+         if (full !== expectedValue3) begin
+            $display("Error at line %d: Value of full should have been %b, but was %b instead", linenum, expectedValue3, full);
+            errors = errors + 1;
+            $finish;
+         end
+
+         #2;         
+         
+      end // end while
+      
+      if (input_file) $fclose(input_file); 
+      if (output_file) $fclose(output_file);
+      $display("Simulation finished: %d test cases %d errors [%s]", linenum, errors, `INPUT);
+      $finish;
+   end
+   
+endmodule

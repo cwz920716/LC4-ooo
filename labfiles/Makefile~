@@ -1,0 +1,47 @@
+RM = rm
+CC = iverilog
+RUN = vvp
+
+# the build dependency:
+INCLUDE = include/*.v
+DEPENDENCY = register.v lc4_divider_one_iter.v lc4_divider.v lc4_regfile.v lc4_alu.v lc4_branch.v lc4_decoder.v ram_1r1w.v ram_2r1w.v lc4_rename_table.v lc4_free_list.v
+TEST = test.vvp
+BENCH = test_lc4_processor.tf
+STAGES = lc4_fetch_stage.v lc4_issue_stage.v lc4_arith_stage.v lc4_load0_stage.v lc4_load1_stage.v lc4_writeback_stage.v lc4_pipeline_latch.v lc4_issue_queue.v lc4_scoreboard.v lc4_reorder_buffer.v
+
+# the build target executable:
+DIVIDER = divider
+ALU = alu
+SINGLE = single
+PIPELINE = pipeline
+REGFILE = regfile
+IQ = iq
+ROB = rob
+
+# $(DIVIDER): lc4_divider.v 
+#	$(CC) -o $(TEST) test_lc4_divider.tf lc4_divider.v $(INCLUDE) $(DEPENDENCY)
+
+# $(ALU): lc4_alu.v 
+#	$(CC) -o $(TEST) test_lc4_alu.tf lc4_alu.v $(INCLUDE) $(DEPENDENCY)
+
+# $(REGFILE): lc4_regfile.v 
+#	$(CC) -o $(TEST) test_lc4_regfile.tf lc4_regfile.v $(INCLUDE) $(DEPENDENCY)
+
+$(IQ): lc4_issue_queue.v
+	$(CC) -Wall -o $(TEST) test_lc4_iq.tf lc4_issue_queue.v register.v
+
+$(ROB): lc4_reorder_buffer.v
+	$(CC) -Wall -o $(TEST) test_lc4_rob.tf lc4_reorder_buffer.v register.v ram_1r1w.v
+
+$(SINGLE): lc4_single.v 
+	$(CC) -Wall -o $(TEST) $(BENCH) lc4_single.v $(INCLUDE) $(DEPENDENCY)
+
+$(PIPELINE): lc4_pipeline.v 
+	$(CC) -Wall -o $(TEST) $(BENCH) lc4_pipeline.v $(STAGES) $(INCLUDE) $(DEPENDENCY)
+
+run: 
+	$(RUN) $(TEST)
+
+clean:
+	$(RM) $(TEST) out.cycles
+

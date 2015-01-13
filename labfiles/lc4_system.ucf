@@ -1,0 +1,77 @@
+# VERSION 1.1
+
+NET "CLK_100MHz"  LOC = "AJ15"  ;
+NET "CLK_32MHz"  LOC = "AH15"  ;
+
+NET "CLK_100MHz" TNM_NET = "SYSTEM_CLOCK";
+TIMESPEC "TS_SYSTEM_CLOCK" = PERIOD "SYSTEM_CLOCK" 10.00 ns HIGH 50 %;
+
+NET "CLK_32MHz" TNM_NET = "FPGA_SYSTEMACE_CLOCK";
+TIMESPEC "TS_FPGA_SYSTEMACE_CLOCK" = PERIOD "FPGA_SYSTEMACE_CLOCK" 31.25 ns HIGH 50 %;
+
+NET "VGA_COMP_SYNCH"  LOC = "G12"  ;
+NET "VGA_HSYNCH"  LOC = "B8"  ;
+NET "VGA_OUT_BLANK_Z"  LOC = "A8"  ;
+NET "VGA_OUT_BLUE<0>"  LOC = "D15"  ;
+NET "VGA_OUT_BLUE<1>"  LOC = "E15"  ;
+NET "VGA_OUT_BLUE<2>"  LOC = "H15"  ;
+NET "VGA_OUT_BLUE<3>"  LOC = "J15"  ;
+NET "VGA_OUT_BLUE<4>"  LOC = "C13"  ;
+NET "VGA_OUT_BLUE<5>"  LOC = "D13"  ;
+NET "VGA_OUT_BLUE<6>"  LOC = "D14"  ;
+NET "VGA_OUT_BLUE<7>"  LOC = "E14"  ;
+NET "VGA_OUT_GREEN<0>"  LOC = "G10"  ;
+NET "VGA_OUT_GREEN<1>"  LOC = "E10"  ;
+NET "VGA_OUT_GREEN<2>"  LOC = "D10"  ;
+NET "VGA_OUT_GREEN<3>"  LOC = "D8"  ;
+NET "VGA_OUT_GREEN<4>"  LOC = "C8"  ;
+NET "VGA_OUT_GREEN<5>"  LOC = "H11"  ;
+NET "VGA_OUT_GREEN<6>"  LOC = "G11"  ;
+NET "VGA_OUT_GREEN<7>"  LOC = "E11"  ;
+NET "VGA_OUT_PIXEL_CLOCK"  LOC = "H12"  ;
+NET "VGA_OUT_RED<0>"  LOC = "G8"  ;
+NET "VGA_OUT_RED<1>"  LOC = "H9"  ;
+NET "VGA_OUT_RED<2>"  LOC = "G9"  ;
+NET "VGA_OUT_RED<3>"  LOC = "F9"  ;
+NET "VGA_OUT_RED<4>"  LOC = "F10"  ;
+NET "VGA_OUT_RED<5>"  LOC = "D7"  ;
+NET "VGA_OUT_RED<6>"  LOC = "C7"  ;
+NET "VGA_OUT_RED<7>"  LOC = "H10"  ;
+NET "VGA_VSYNCH"  LOC = "D11"  ;
+
+NET "AOUT<0>"  LOC = "W4"  ; 
+NET "AOUT<1>"  LOC = "W5"  ; 
+NET "AOUT<2>"  LOC = "AB1"  ; 
+NET "AOUT<3>"  LOC = "Y4"  ; 
+NET "COUT<0>"  LOC = "N5"  ; 
+NET "COUT<1>"  LOC = "L4"  ; 
+NET "COUT<2>"  LOC = "N2"  ; 
+NET "COUT<3>"  LOC = "R9"  ; 
+NET "COUT<4>"  LOC = "M3"  ; 
+NET "COUT<5>"  LOC = "P1"  ; 
+NET "COUT<6>"  LOC = "P7"  ; 
+NET "LDGND"  LOC = "V7"  ;
+NET "LDOUT<0>"  LOC = "T8"  ; 
+NET "LDOUT<1>"  LOC = "U5"  ; 
+NET "LDOUT<2>"  LOC = "W2"  ; 
+NET "LDOUT<3>"  LOC = "U9"  ; 
+NET "LDOUT<4>"  LOC = "V4"  ; 
+NET "LDOUT<5>"  LOC = "Y1"  ; 
+NET "LDOUT<6>"  LOC = "U8"  ; 
+NET "LDOUT<7>"  LOC = "V6"  ; 
+
+NET "PS2KEYBOARD_CLK"  LOC = "AG2" ; 
+NET "PS2KEYBOARD_DATA"  LOC = "AG1" ;
+
+NET "RST_BTN_IN"  LOC = "AH2"  ; # board right button
+NET "GWE_BTN_IN"  LOC = "AG3" ; # board down button
+
+
+NET "SWITCH_IN<0>"  LOC = "N6"  ; # daughterboard switch 0
+NET "SWITCH_IN<1>"  LOC = "L5"  ; # daughterboard switch 1
+NET "SWITCH_IN<2>"  LOC = "M2"  ; # daughterboard switch 2
+NET "SWITCH_IN<3>"  LOC = "P9"  ; # daughterboard switch 3
+NET "SWITCH_IN<4>"  LOC = "M4"  ; # daughterboard switch 4
+NET "SWITCH_IN<5>"  LOC = "N1"  ; # daughterboard switch 5
+NET "SWITCH_IN<6>"  LOC = "P8"  ; # daughterboard switch 6
+NET "SWITCH_IN<7>"  LOC = "N4"  ; # daughterboard switch 7

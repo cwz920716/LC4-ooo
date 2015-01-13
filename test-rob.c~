@@ -1,0 +1,122 @@
+#include <stdio.h>
+
+struct rob {
+  int valid[8];
+  int commit[8];
+  int data[8];
+  int wr;
+  int rd;
+  int cnt;
+};
+
+int full(struct rob *q) {
+  return q->cnt == 8;
+}
+
+unsigned int valid2(struct rob *q) {
+  return q->valid[q->rd];
+}
+
+
+unsigned int commit2(struct rob *q) {
+  return q->commit[q->rd];
+}
+
+unsigned int data2(struct rob *q) {
+  return q->data[q->rd];
+}
+
+void op(struct rob *q, int data_in, int enq, int commit_in, int commit, int deq, int flush) {
+  int i = 0;
+  printf("%.4x %d %d %d %d %d %.4x %d %d %d\n", data_in, enq, commit_in, commit, deq, flush, data2(q), valid2(q), commit2(q), full(q));
+  // printf("wr: %d\n", q->wr);
+  if (flush) {
+    q->wr = q->rd = q->cnt = 0;
+    for (i = 0; i < 8; i++) {
+      q->valid[i] = 0;
+      q->commit[i] = 0;
+    }
+    return;
+  }
+
+  if (deq && q->valid[q->rd] && q->commit[q->rd]) {
+    q->valid[q->rd] = 0;
+    q->rd = (q->rd + 1) % 8;
+    q->cnt--;
+  }
+
+  if (commit && q->valid[commit_in] && !q->commit[commit_in]) {
+    q->commit[commit_in] = 1;
+  }
+
+  if (enq && !full(q)) {
+    q->valid[q->wr] = 1;
+    q->commit[q->wr] = 0;
+    q->data[q->wr] = data_in;
+    q->wr = (q->wr + 1) % 8;
+    q->cnt++;
+  }
+}
+
+int main() {
+  struct rob q;
+  q.wr = q.rd = q.cnt = 0;
+  int i = 0;
+  for (i = 0; i < 8; i++) {
+    q.valid[i] = 0;
+    q.commit[i] = 0;
+    q.data[i] = 0;
+  }
+
+  op(&q, 1, 1, 0, 0, 0, 0);
+  op(&q, 2, 1, 0, 0, 0, 0);
+  op(&q, 3, 1, 0, 0, 0, 0);
+  op(&q, 4, 1, 0, 0, 0, 0);
+  op(&q, 5, 1, 0, 0, 0, 0);
+  op(&q, 6, 1, 0, 0, 0, 0);
+  op(&q, 7, 1, 0, 0, 0, 0);
+  op(&q, 8, 1, 0, 0, 0, 0);
+  op(&q, 0, 0, 0, 1, 0, 0);
+  op(&q, 0, 0, 2, 1, 0, 0);
+  op(&q, 0, 0, 4, 1, 0, 0);
+  op(&q, 0, 0, 6, 1, 0, 0);
+  op(&q, 0, 0, 0, 0, 1, 0);
+  op(&q, 0, 0, 1, 1, 0, 0);
+  op(&q, 0, 0, 5, 1, 0, 0);
+  op(&q, 0, 0, 0, 0, 1, 0);
+  op(&q, 0, 0, 3, 1, 0, 0);
+  op(&q, 0, 0, 0, 0, 1, 0);
+  op(&q, 0, 0, 0, 0, 1, 0);
+  op(&q, 0, 0, 0, 0, 1, 0);
+  op(&q, 0, 0, 7, 1, 0, 0);
+  op(&q, 0, 0, 0, 0, 1, 0);
+  op(&q, 0, 0, 0, 0, 1, 0);
+  op(&q, 0, 0, 0, 0, 1, 0);
+  op(&q, 0, 0, 0, 0, 0, 1);
+  op(&q, 1, 1, 0, 0, 0, 0);
+  op(&q, 2, 1, 0, 0, 0, 0);
+  op(&q, 3, 1, 2, 1, 0, 0);
+  op(&q, 4, 1, 0, 0, 0, 0);
+  op(&q, 5, 1, 0, 1, 0, 0);
+  op(&q, 6, 1, 0, 0, 0, 0);
+  op(&q, 7, 1, 5, 1, 0, 0);
+  op(&q, 8, 1, 3, 1, 0, 0);
+  op(&q, 9, 1, 4, 1, 1, 0);
+  op(&q, 9, 0, 1, 1, 0, 0);
+  op(&q, 3, 1, 6, 1, 1, 0);
+  op(&q, 6, 1, 0, 1, 1, 0);
+  op(&q, 9, 1, 1, 1, 1, 0);
+  op(&q, 2, 1, 1, 0, 1, 0);
+  op(&q, 3, 1, 1, 1, 1, 0);
+  op(&q, 0, 0, 0, 0, 0, 1);
+  op(&q, 1, 1, 0, 0, 0, 0);
+  op(&q, 2, 1, 0, 1, 0, 0);
+  op(&q, 3, 1, 1, 1, 1, 0);
+  op(&q, 4, 1, 2, 1, 1, 0);
+  op(&q, 5, 1, 3, 1, 1, 0);
+  op(&q, 6, 1, 4, 1, 1, 0);
+  op(&q, 7, 1, 5, 1, 1, 0);
+  op(&q, 8, 1, 6, 1, 1, 0);
+  op(&q, 9, 1, 7, 1, 1, 0);
+  op(&q, 0, 0, 0, 0, 0, 0);
+}

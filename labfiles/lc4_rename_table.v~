@@ -1,0 +1,30 @@
+`timescale 1ns / 1ps
+
+module lc4_rename_table (clk, gwe, rst, flush, r1sel, r1psel, r2sel, r2psel, r3sel, r3psel, wsel, wpsel, we);
+   
+   parameter n = 8;
+   parameter w = 4;
+
+   input clk, gwe, rst, flush;
+   input [2:0] r1sel, r2sel, r3sel, wsel;
+   input [w-1:0]  wpsel;
+   output [w-1:0] r1psel, r2psel, r3psel;
+
+   reg [w-1:0] mem_state [n-1:0];
+
+   integer              i;
+
+   assign #(1) r1psel = mem_state[r1sel];
+   assign #(1) r2psel = mem_state[r2sel];
+   assign #(1) r3psel = mem_state[r3sel];
+
+   always @(posedge clk) 
+     begin 
+       if (gwe & rst) 
+         for (i = 0; i < n; i = i + 1)
+           mem_state[i] = i;
+       else if (gwe & we)
+         mem_state[wsel] = wpsel; 
+     end
+
+endmodule
